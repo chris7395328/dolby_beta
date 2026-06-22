@@ -44,11 +44,23 @@ jobs:
         ./apktool d original.apk -o decoded
         cp UnblockNeteaseMusic.zip decoded/assets/
 
-        # 开启“音质优先”时，低于无损都走插件服务器
-        sed -i 's/"256000"/"999000"/g' decoded/smali*/com/raincat/dolby_beta/helper/ScriptHelper.smali
+        echo "查找包含 MIN_BR 的 smali 文件..."
+        grep -Rsl "MIN_BR" decoded/smali* || true
 
-        # 关闭“音质优先”时，低于 320K 才走插件服务器，可选
-        sed -i 's/"96000"/"320000"/g' decoded/smali*/com/raincat/dolby_beta/helper/ScriptHelper.smali
+        SCRIPT_FILES=$(grep -Rsl "MIN_BR" decoded/smali* || true)
+
+        if [ -z "$SCRIPT_FILES" ]; then
+          echo "没有找到包含 MIN_BR 的 smali 文件，可能下载到的 APK 不对，或者类被混淆/逻辑已变。"
+          echo "列出包含 ENABLE_FLAC 的文件："
+          grep -Rsl "ENABLE_FLAC" decoded/smali* || true
+          exit 1
+        fi
+
+        for file in $SCRIPT_FILES; do
+          echo "修改文件: $file"
+          sed -i 's/"256000"/"999000"/g' "$file"
+          sed -i 's/"96000"/"320000"/g' "$file"
+        done
         
     - name: Rebuild APK
       run: |
