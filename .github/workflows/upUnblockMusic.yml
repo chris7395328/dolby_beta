@@ -44,23 +44,30 @@ jobs:
         ./apktool d original.apk -o decoded
         cp UnblockNeteaseMusic.zip decoded/assets/
 
-        echo "查找包含 MIN_BR 的 smali 文件..."
-        grep -Rsl "MIN_BR" decoded/smali* || true
+        echo "搜索 APK 内的码率常量..."
+        grep -RIn --include="*.smali" '"256000"\|"96000"\|"320000"\|"999000"' decoded || true
 
-        SCRIPT_FILES=$(grep -Rsl "MIN_BR" decoded/smali* || true)
+        echo "定位同时包含 256000 和 96000 的 smali 文件..."
+        TARGET_FILES=$(grep -Rsl --include="*.smali" '"256000"' decoded | xargs -r grep -l '"96000"' || true)
 
-        if [ -z "$SCRIPT_FILES" ]; then
-          echo "没有找到包含 MIN_BR 的 smali 文件，可能下载到的 APK 不对，或者类被混淆/逻辑已变。"
-          echo "列出包含 ENABLE_FLAC 的文件："
-          grep -Rsl "ENABLE_FLAC" decoded/smali* || true
+        if [ -z "$TARGET_FILES" ]; then
+          echo "没有找到同时包含 256000 和 96000 的 smali 文件。"
+          echo "进一步搜索 libnode / QQ_COOKIE / MIGU_COOKIE："
+          grep -RIn --include="*.smali" 'libnode\|QQ_COOKIE\|MIGU_COOKIE\|proxy_priority' decoded || true
           exit 1
         fi
 
-        for file in $SCRIPT_FILES; do
-          echo "修改文件: $file"
+        echo "准备修改这些文件："
+        echo "$TARGET_FILES"
+
+        for file in $TARGET_FILES; do
+          echo "修改 $file"
           sed -i 's/"256000"/"999000"/g' "$file"
           sed -i 's/"96000"/"320000"/g' "$file"
         done
+
+        echo "修改后检查："
+        grep -RIn --include="*.smali" '"999000"\|"320000"' decoded || true
         
     - name: Rebuild APK
       run: |
