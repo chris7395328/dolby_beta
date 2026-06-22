@@ -1,17 +1,18 @@
 buildscript {
     repositories {
-        // 1. 优先使用阿里云的 google 和 central 代理，它们比 jcenter 稳定得多
+        // 确保仓库配置正确
         maven { url 'https://maven.aliyun.com/repository/google' }
         maven { url 'https://maven.aliyun.com/repository/public' }
-        
-        // 2. 官方原生源作为兜底
         google()
         mavenCentral()
-        
-        // 3. 将不稳定的 jcenter 放到最后，或者直接注释掉
-        // maven { url 'https://maven.aliyun.com/nexus/content/repositories/jcenter' }
     }
-    // ...
+    dependencies {
+        // 核心：检查这一行还在不在！如果没有，必须加回来
+        // 这里的版本号（例如 4.1.0）请根据你项目原本的版本填写
+        classpath 'com.android.tools.build:gradle:4.0.2' 
+
+        // 如果有其他插件（如 kotlin、kotlin-gradle-plugin），也需要写在这里
+    }
 }
 
 allprojects {
