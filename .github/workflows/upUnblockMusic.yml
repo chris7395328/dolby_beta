@@ -43,6 +43,12 @@ jobs:
       run: |
         ./apktool d original.apk -o decoded
         cp UnblockNeteaseMusic.zip decoded/assets/
+
+        # 开启“音质优先”时，低于无损都走插件服务器
+        sed -i 's/"256000"/"999000"/g' decoded/smali*/com/raincat/dolby_beta/helper/ScriptHelper.smali
+
+        # 关闭“音质优先”时，低于 320K 才走插件服务器，可选
+        sed -i 's/"96000"/"320000"/g' decoded/smali*/com/raincat/dolby_beta/helper/ScriptHelper.smali
         
     - name: Rebuild APK
       run: |
