@@ -1,13 +1,23 @@
 buildscript {
     repositories {
+        // 1. 优先使用阿里云的 google 和 central 代理，它们比 jcenter 稳定得多
+        maven { url 'https://maven.aliyun.com/repository/google' }
+        maven { url 'https://maven.aliyun.com/repository/public' }
+        
+        // 2. 官方原生源作为兜底
         google()
         mavenCentral()
-        gradlePluginPortal()
+        
+        // 3. 将不稳定的 jcenter 放到最后，或者直接注释掉
+        // maven { url 'https://maven.aliyun.com/nexus/content/repositories/jcenter' }
     }
+    // ...
 }
 
 allprojects {
     repositories {
+        maven { url 'https://maven.aliyun.com/repository/google' }
+        maven { url 'https://maven.aliyun.com/repository/public' }
         google()
         mavenCentral()
     }
