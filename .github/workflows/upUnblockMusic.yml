@@ -37,44 +37,21 @@ jobs:
     - name: Update UnblockNeteaseMusic
       run: |
         git clone --depth=1 https://github.com/UnblockNeteaseMusic/server.git
+
+        cat > server/.env <<'EOF'
+        ENABLE_FLAC=true
+        MIN_BR=999000
+        EOF
+
+        echo "检查 .env："
+        cat server/.env
+
         cd server && zip -r ../UnblockNeteaseMusic.zip . && cd ..
         
     - name: Decompile and modify
       run: |
         ./apktool d original.apk -o decoded
-
-        rm -rf unblock_tmp
-        mkdir unblock_tmp
-        unzip -q UnblockNeteaseMusic.zip -d unblock_tmp
-
-        python3 - <<'PY'
-        from pathlib import Path
-
-        p = Path("unblock_tmp/precompiled/app.js")
-        s = p.read_text(encoding="utf-8")
-
-        old = "l=Number(process.env.MIN_BR)||0"
-        new = "l=999e3"
-
-        if old not in s:
-            raise SystemExit("没有找到 MIN_BR 压缩代码，可能 server 版本结构变了")
-
-        s = s.replace(old, new, 1)
-        p.write_text(s, encoding="utf-8")
-
-        print("已修改 precompiled/app.js:", old, "=>", new)
-        PY
-
-        # 可选：源码也一起改，虽然默认不跑 src
-        if [ -f unblock_tmp/src/hook.js ]; then
-          sed -i 's/const min_br = Number(process.env.MIN_BR) || 0;/const min_br = 999000;/g' unblock_tmp/src/hook.js
-        fi
-
-        cd unblock_tmp
-        zip -qr ../UnblockNeteaseMusic_patched.zip .
-        cd ..
-
-        cp UnblockNeteaseMusic_patched.zip decoded/assets/UnblockNeteaseMusic.zip
+        cp UnblockNeteaseMusic.zip decoded/assets/
         
     - name: Rebuild APK
       run: |
